@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Graph Network Planner | DAA Mini Project</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--accent:#3157d5;--accent2:#e8edff;--green:#16835f;--red:#d9485f;--gold:#b7791f;--shadow:0 8px 28px #1720330c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif}
+header{padding:22px 26px;background:linear-gradient(120deg,#162554,#3157d5);color:white;display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+h1{font-size:clamp(22px,3vw,32px);margin:0 0 5px;letter-spacing:-.6px}header p{margin:0;color:#dce5ff}.tag{border:1px solid #ffffff55;padding:7px 11px;border-radius:999px;font-size:12px}
+main{max-width:1500px;margin:20px auto;padding:0 18px 28px;display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow);min-width:0}
+h2{font-size:16px;margin:0 0 12px}h3{font-size:13px;margin:16px 0 8px;color:#334155;text-transform:uppercase;letter-spacing:.06em}
+label{display:block;font-size:12px;font-weight:700;color:#475569;margin:9px 0 5px}
+input,select,button{font:inherit}input,select{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;background:white;color:var(--ink);min-width:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+button{border:0;border-radius:8px;padding:9px 11px;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+button:hover{filter:brightness(.95)}button.secondary{background:#e9eef7;color:#24324a}button.danger{background:#fff0f1;color:#b42338}button.green{background:var(--green)}button:disabled{opacity:.5;cursor:not-allowed}
+.canvas-panel{display:flex;flex-direction:column;gap:10px}.canvas-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#graph{width:100%;height:540px;background:radial-gradient(circle at 1px 1px,#dce4f0 1px,transparent 1.2px);background-size:20px 20px;border:1px solid var(--line);border-radius:12px;touch-action:none}
+.edge{stroke:#9aa9bf;stroke-width:2.5}.edge.highlight{stroke:var(--red);stroke-width:5}.edge.mst{stroke:var(--green);stroke-width:5}.edge-label{font-size:12px;fill:#475569;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}.node{fill:#e8edff;stroke:#3157d5;stroke-width:2.5;cursor:grab}.node.selected{fill:#3157d5;stroke:#1837a1}.node-label{font-size:13px;font-weight:700;fill:#172033;pointer-events:none}.node-label.selected-label{fill:white}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.note{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:10px;color:#526078;font-size:12px}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{border:1px solid var(--line);border-radius:10px;padding:10px}.metric strong{display:block;font-size:20px;margin-top:3px}.metric span{font-size:11px;color:var(--muted)}
+#result{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6;background:#f8fafc;border:1px solid var(--line);padding:11px;border-radius:9px;min-height:90px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:7px}th,td{text-align:left;padding:7px 5px;border-bottom:1px solid #e7edf5;vertical-align:top}th{color:#64748b;font-size:11px;text-transform:uppercase}
+.small{font-size:12px;color:var(--muted)}.list-scroll{max-height:185px;overflow:auto}.pill{display:inline-block;background:var(--accent2);color:#2848b6;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:700}
+footer{max-width:1500px;margin:0 auto;padding:0 20px 24px;color:var(--muted);font-size:12px}
+@media(max-width:1150px){main{grid-template-columns:280px minmax(0,1fr)}.right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}.right-panel>h2{grid-column:1/-1}}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:0 10px}.right-panel{display:block}.panel{padding:13px}#graph{height:420px}header{padding:18px}.tag{display:none}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Graph Network Planner</h1><p>Interactive graph algorithms laboratory · Design and Analysis of Algorithms</p></div>
+ <span class="tag">Single HTML file · Works offline</span>
+</header>
+<main>
+<section class="panel">
+ <h2>Network editor</h2>
+ <div class="note">Each location is a vertex. Each connection is an undirected, weighted edge. Edge weights must be non-negative; enter positive weights for normal road/network distances.</div>
+ <h3>Vertices</h3>
+ <label for="nodeName">Location name</label><input id="nodeName" placeholder="e.g., A or Coimbatore" maxlength="24">
+ <div class="btns"><button id="addNode">Add vertex</button><button class="secondary" id="renameHint">How to move?</button></div>
+ <h3>Weighted edge</h3>
+ <div class="row"><div><label for="edgeA">From</label><select id="edgeA"></select></div><div><label for="edgeB">To</label><select id="edgeB"></select></div></div>
+ <label for="edgeWeight">Weight / cost</label><input id="edgeWeight" type="number" min="0.01" step="any" value="4">
+ <div class="btns"><button id="addEdge">Add / update edge</button></div>
+ <h3>Graph actions</h3>
+ <div class="btns"><button class="secondary" id="sample">Load sample</button><button class="secondary" id="clear">Clear all</button><button class="secondary" id="deleteSelected">Delete selected</button></div>
+ <p class="small">Tip: drag a vertex to reposition it. Click a vertex to select it. Use “Delete selected” to remove that vertex and its edges.</p>
+ <h3>Network summary</h3>
+ <div class="metric-grid"><div class="metric"><span>Vertices (V)</span><strong id="vCount">0</strong></div><div class="metric"><span>Edges (E)</span><strong id="eCount">0</strong></div></div>
+ <h3>Adjacency list</h3><div class="list-scroll"><table><thead><tr><th>Vertex</th><th>Neighbours (weight)</th></tr></thead><tbody id="adjacency"></tbody></table></div>
+</section>
+<section class="panel canvas-panel">
+ <div class="canvas-head"><div><h2 style="margin-bottom:3px">Network canvas</h2><span class="small">Drag nodes · Select an algorithm to highlight results</span></div><span class="pill" id="status">Ready</span></div>
+ <svg id="graph" viewBox="0 0 800 540" role="img" aria-label="Interactive weighted graph"></svg>
+ <div class="legend"><span><i class="dot" style="background:#9aa9bf"></i>Regular edge</span><span><i class="dot" style="background:#d9485f"></i>Shortest path</span><span><i class="dot" style="background:#16835f"></i>Minimum spanning tree</span><span><i class="dot" style="background:#3157d5"></i>Selected vertex</span></div>
+ <div class="note">Visual interpretation: Dijkstra highlights a minimum-weight route; Prim and Kruskal highlight the minimum spanning tree; BFS and DFS highlight traversal order in the result panel. An MST exists only when all vertices belong to one connected component.</div>
+</section>
+<section class="panel right-panel">
+ <h2>Algorithm workbench</h2>
+ <label for="algorithm">Algorithm</label>
+ <select id="algorithm"><option value="dijkstra">Dijkstra — shortest path</option><option value="prim">Prim — minimum spanning tree</option><option value="kruskal">Kruskal — minimum spanning tree</option><option value="bfs">BFS — breadth-first traversal</option><option value="dfs">DFS — depth-first traversal</option></select>
+ <div class="row"><div><label for="source">Source</label><select id="source"></select></div><div><label for="target">Destination</label><select id="target"></select></div></div>
+ <div class="btns"><button id="run" class="green">Run algorithm</button><button class="secondary" id="resetHighlight">Clear highlights</button></div>
+ <h3>Result</h3><div id="result">Load the sample graph, then run an algorithm to see its output.</div>
+ <h3>Analysis</h3>
+ <div class="metric-grid"><div class="metric"><span>Reported runtime</span><strong id="runtime">—</strong><span>milliseconds (single run)</span></div><div class="metric"><span>Selected edges</span><strong id="selectedEdges">—</strong><span>route / MST edges</span></div></div>
+ <p class="small">Browser runtime is an observation for this run, not a proof of asymptotic complexity. Repeat experiments on controlled graph sizes for a fair performance study.</p>
+ <h3>Complexity reference</h3>
+ <table><thead><tr><th>Algorithm</th><th>Time</th><th>Space</th></tr></thead><tbody>
+ <tr><td>Dijkstra (heap)</td><td>O((V+E) log V)</td><td>O(V+E)</td></tr>
+ <tr><td>Prim (heap)</td><td>O(E log V)</td><td>O(V+E)</td></tr>
+ <tr><td>Kruskal</td><td>O(E log E)</td><td>O(V+E)</td></tr>
+ <tr><td>BFS</td><td>O(V+E)</td><td>O(V)</td></tr>
+ <tr><td>DFS</td><td>O(V+E)</td><td>O(V)</td></tr>
+ </tbody></table>
+</section>
+</main>
+<footer>DAA Mini Project · Graph Network Planner · Save this file as <strong>graph_network_planner.html</strong> and open it in a modern browser. All processing happens locally in this page; no server or external library is used.</footer>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ const svg = $('graph'), NS='http://www.w3.org/2000/svg';
+ let nodes=new Map(), edges=[], nextId=1, selectedNode=null, dragging=null, dragOffset={x:0,y:0};
+ let highlightedEdges=new Set(), mstEdges=new Set(), visitOrder=[];
+ const edgeKey=(a,b)=>[a,b].sort().join('|');
+ const fmt=n=>Number.isInteger(n)?String(n):Number(n.toFixed(3)).toString();
+ function setStatus(s){$('status').textContent=s}
+ function clearHighlights(){highlightedEdges.clear();mstEdges.clear();visitOrder=[];renderGraph()}
+ function addNode(name,x,y){
+   name=(name||'').trim(); if(!name){alert('Enter a vertex/location name.');return}
+   if([...nodes.values()].some(n=>n.name.toLowerCase()===name.toLowerCase())){alert('A vertex with that name already exists.');return}
+   const id='n'+nextId++; nodes.set(id,{id,name,x:x??(90+Math.random()*620),y:y??(65+Math.random()*410)});
+   selectedNode=id; updateAll(); setStatus('Vertex added');
+ }
+ function addEdgeByIds(a,b,w){
+   if(!a||!b||!nodes.has(a)||!nodes.has(b)){alert('Choose two existing vertices.');return false}
+   if(a===b){alert('Self-loops are not supported in this project. Choose two different vertices.');return false}
+   if(!Number.isFinite(w)||w<=0){alert('Weight must be a positive number.');return false}
+   const old=edges.find(e=>edgeKey(e.a,e.b)===edgeKey(a,b));
+   if(old) old.w=w; else edges.push({a,b,w});
+   clearHighlights();updateAll();setStatus(old?'Edge updated':'Edge added');return true
+ }
+ function removeNode(id){
+   if(!nodes.has(id))return; nodes.delete(id);edges=edges.filter(e=>e.a!==id&&e.b!==id);
+   if(selectedNode===id)selectedNode=null;clearHighlights();updateAll();setStatus('Vertex deleted')
+ }
+ function updateSelect(select,keep=true){
+   const prev=keep?select.value:'';select.innerHTML='';
+   for(const n of nodes.values()){const o=document.createElement('option');o.value=n.id;o.textContent=n.name;select.appendChild(o)}
+   if([...select.options].some(o=>o.value===prev))select.value=prev;
+ }
+ function updateAll(){
+   ['edgeA','edgeB','source','target'].forEach(id=>updateSelect($(id)));
+   $('vCount').textContent=nodes.size;$('eCount').textContent=edges.length;
+   const tbody=$('adjacency');tbody.innerHTML='';
+   for(const n of nodes.values()){
+     const neighbours=edges.filter(e=>e.a===n.id||e.b===n.id).map(e=>{const id=e.a===n.id?e.b:e.a;return `${nodes.get(id).name} (${fmt(e.w)})`});
+     const tr=document.createElement('tr'),td1=document.createElement('td'),td2=document.createElement('td');
+     td1.textContent=n.name;td2.textContent=neighbours.join(', ')||'—';tr.append(td1,td2);tbody.appendChild(tr)
+   }
+   renderGraph()
+ }
+ function el(tag,attrs={},txt){
+   const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);
+   if(txt!==undefined)e.textContent=txt;return e
+ }
+ function renderGraph(){
+   svg.innerHTML='';
+   for(const e of edges){
+     const a=nodes.get(e.a),b=nodes.get(e.b);if(!a||!b)continue;
+     const key=edgeKey(e.a,e.b),klass=highlightedEdges.has(key)?'edge highlight':mstEdges.has(key)?'edge mst':'edge';
+     svg.appendChild(el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:klass}));
+     const mx=(a.x+b.x)/2,my=(a.y+b.y)/2-7;
+     svg.appendChild(el('text',{x:mx,y:my,'text-anchor':'middle',class:'edge-label'},fmt(e.w)));
+   }
+   for(const n of nodes.values()){
+     const g=el('g',{ 'data-id':n.id });
+     g.appendChild(el('circle',{cx:n.x,cy:n.y,r:21,class:'node'+(selectedNode===n.id?' selected':'')}));
+     g.appendChild(el('text',{x:n.x,y:n.y+4,'text-anchor':'middle',class:'node-label'+(selectedNode===n.id?' selected-label':'')},n.name.length>7?n.name.slice(0,6)+'…':n.name));
+     g.addEventListener('pointerdown',ev=>{ev.preventDefault();selectedNode=n.id;dragging=n.id;const p=point(ev);dragOffset={x:n.x-p.x,y:n.y-p.y};svg.setPointerCapture?.(ev.pointerId);renderGraph()});
+     g.addEventListener('click',()=>{selectedNode=n.id;renderGraph()});
+     svg.appendChild(g)
+   }
+ }
+ function point(ev){const r=svg.getBoundingClientRect();return {x:(ev.clientX-r.left)*800/r.width,y:(ev.clientY-r.top)*540/r.height}}
+ svg.addEventListener('pointermove',ev=>{if(!dragging)return;const p=point(ev),n=nodes.get(dragging);if(n){n.x=Math.max(25,Math.min(775,p.x+dragOffset.x));n.y=Math.max(25,Math.min(515,p.y+dragOffset.y));renderGraph()}});
+ svg.addEventListener('pointerup',()=>{dragging=null});svg.addEventListener('pointercancel',()=>dragging=null);
+ $('addNode').onclick=()=>{addNode($('nodeName').value);$('nodeName').value=''};
+ $('addEdge').onclick=()=>addEdgeByIds($('edgeA').value,$('edgeB').value,Number($('edgeWeight').value));
+ $('deleteSelected').onclick=()=>selectedNode?removeNode(selectedNode):alert('Click a vertex on the canvas first.');
+ $('renameHint').onclick=()=>alert('Click and hold a vertex, then drag it to move it. Click a vertex to select it; Delete selected removes it and its incident edges.');
+ $('clear').onclick=()=>{if(!confirm('Clear the entire graph?'))return;nodes.clear();edges=[];selectedNode=null;clearHighlights();updateAll();$('result').textContent='Graph cleared.';setStatus('Empty graph')};
+ $('resetHighlight').onclick=()=>{clearHighlights();$('result').textContent='Highlights cleared.';setStatus('Ready')};
+ $('sample').onclick=loadSample;
+ function adjacency(){
+   const adj=new Map([...nodes.keys()].map(id=>[id,[]]));
+   for(const e of edges){adj.get(e.a).push({to:e.b,w:e.w});adj.get(e.b).push({to:e.a,w:e.w})}
+   for(const list of adj.values())list.sort((a,b)=>nodes.get(a.to).name.localeCompare(nodes.get(b.to).name));
+   return adj
+ }
+ function dijkstra(src,dst,adj){
+   const dist=new Map([...nodes.keys()].map(id=>[id,Infinity])),prev=new Map(),done=new Set(),pq=[];
+   dist.set(src,0);pq.push({id:src,d:0});
+   while(pq.length){pq.sort((a,b)=>a.d-b.d);const cur=pq.shift();if(done.has(cur.id))continue;done.add(cur.id);if(cur.id===dst)break;
+     for(const nb of adj.get(cur.id)){const nd=cur.d+nb.w;if(nd<dist.get(nb.to)){dist.set(nb.to,nd);prev.set(nb.to,cur.id);pq.push({id:nb.to,d:nd})}}
+   }
+   if(!Number.isFinite(dist.get(dst)))return {path:null,distance:Infinity,visited:done.size};
+   const path=[];let at=dst;while(at!==undefined){path.unshift(at);if(at===src)break;at=prev.get(at)}
+   return {path:path[0]===src?path:null,distance:dist.get(dst),visited:done.size}
+ }
+ function traversal(src,adj,dfs){
+   const seen=new Set(),order=[];
+   function visit(id){seen.add(id);order.push(id);for(const nb of adj.get(id)){if(!seen.has(nb.to)){if(dfs)visit(nb.to);else queue.push(nb.to)}}}
+   const queue=[];
+   if(dfs)visit(src);else{seen.add(src);queue.push(src);while(queue.length){const u=queue.shift();order.push(u);for(const nb of adj.get(u))if(!seen.has(nb.to)){seen.add(nb.to);queue.push(nb.to)}}}
+   return order
+ }
+ function prim(adj){
+   const visited=new Set(),chosen=[],roots=[];
+   for(const start of nodes.keys()){
+     if(visited.has(start))continue;roots.push(start);visited.add(start);const candidates=[];
+     const add=id=>adj.get(id).forEach(nb=>{if(!visited.has(nb.to))candidates.push({a:id,b:nb.to,w:nb.w})});add(start);
+     while(candidates.length){candidates.sort((x,y)=>x.w-y.w);const e=candidates.shift();if(visited.has(e.b))continue;visited.add(e.b);chosen.push(e);add(e.b)}
+   }
+   return {edges:chosen,total:chosen.reduce((s,e)=>s+e.w,0),components:roots.length}
+ }
+ class DSU{constructor(ids){this.p=new Map(ids.map(x=>[x,x]));this.r=new Map(ids.map(x=>[x,0]))}find(x){let p=this.p.get(x);if(p!==x)this.p.set(x,this.find(p));return this.p.get(x)}union(a,b){a=this.find(a);b=this.find(b);if(a===b)return false;if(this.r.get(a)<this.r.get(b))[a,b]=[b,a];this.p.set(b,a);if(this.r.get(a)===this.r.get(b))this.r.set(a,this.r.get(a)+1);return true}}
+ function kruskal(){const dsu=new DSU([...nodes.keys()]),sorted=[...edges].sort((a,b)=>a.w-b.w),chosen=[];let total=0;for(const e of sorted)if(dsu.union(e.a,e.b)){chosen.push(e);total+=e.w}return {edges:chosen,total,components: nodes.size-chosen.length}}
+ $('run').onclick=()=>{
+   if(!nodes.size){alert('Add vertices or load the sample graph first.');return}
+   const alg=$('algorithm').value,src=$('source').value,dst=$('target').value,adj=adjacency();clearHighlights();
+   const t0=performance.now();let output='';
+   if(alg==='dijkstra'){
+     if(!src||!dst){alert('Select source and destination.');return}
+     const r=dijkstra(src,dst,adj);if(!r.path){output=`No path exists from ${nodes.get(src).name} to ${nodes.get(dst).name}. They may belong to different connected components.`}
+     else{for(let i=1;i<r.path.length;i++)highlightedEdges.add(edgeKey(r.path[i-1],r.path[i]));
+       output=`DIJKSTRA — SHORTEST PATH\nRoute: ${r.path.map(id=>nodes.get(id).name).join(' → ')}\nTotal weight: ${fmt(r.distance)}\nVertices in route: ${r.path.length}\nSettled vertices: ${r.visited}\n\nEdge breakdown:\n${r.path.slice(1).map((id,i)=>{const prev=r.path[i],e=edges.find(e=>edgeKey(e.a,e.b)===edgeKey(prev,id));return `${nodes.get(prev).name} → ${nodes.get(id).name}: ${fmt(e.w)}`}).join('\n')||'(source equals destination)'}`}
+   }else if(alg==='prim'||alg==='kruskal'){
+     const r=alg==='prim'?prim(adj):kruskal();r.edges.forEach(e=>mstEdges.add(edgeKey(e.a,e.b)));
+     output=`${alg.toUpperCase()} — MINIMUM SPANNING FOREST\nSelected edges: ${r.edges.length}\nTotal weight: ${fmt(r.total)}\nConnected components: ${r.components}\n\n${r.edges.map(e=>`${nodes.get(e.a).name} — ${nodes.get(e.b).name}: ${fmt(e.w)}`).join('\n')||'(no edges selected)'}\n\n${r.components===1?'The graph is connected; the result is an MST.':'The graph is disconnected; the result is a minimum spanning forest, not a single MST.'}`;
+   }else{
+     if(!src){alert('Select a source vertex.');return}
+     visitOrder=traversal(src,adj,alg==='dfs');
+     output=`${alg.toUpperCase()} — GRAPH TRAVERSAL\nStart vertex: ${nodes.get(src).name}\nVisit order: ${visitOrder.map(id=>nodes.get(id).name).join(' → ')}\nVisited vertices: ${visitOrder.length} of ${nodes.size}\n\nTraversal only reaches the connected component containing the start vertex.`;
+   }
+   const elapsed=performance.now()-t0;$('runtime').textContent=elapsed.toFixed(3);$('selectedEdges').textContent=highlightedEdges.size+mstEdges.size;
+   $('result').textContent=output;renderGraph();setStatus('Algorithm completed')
+ };
+ function loadSample(){
+   nodes.clear();edges=[];nextId=1;selectedNode=null;
+   const specs=[['A',115,110],['B',315,75],['C',230,250],['D',470,220],['E',675,330],['F',470,425]];
+   const ids={};specs.forEach(([name,x,y])=>{const id='n'+nextId++;ids[name]=id;nodes.set(id,{id,name,x,y})});
+   [['A','B',4],['A','C',2],['B','C',1],['B','D',5],['C','D',8],['C','E',10],['D','E',2],['D','F',6],['E','F',3]].forEach(([a,b,w])=>edges.push({a:ids[a],b:ids[b],w}));
+   selectedNode=ids.A;clearHighlights();updateAll();$('result').textContent='Sample graph loaded (6 vertices, 9 edges). Try Dijkstra from A to E, then compare Prim and Kruskal.';$('runtime').textContent='—';$('selectedEdges').textContent='—';setStatus('Sample loaded')
+ }
+ loadSample();
+})();
+</script>
+</body>
+</html>
